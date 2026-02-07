@@ -1,0 +1,132 @@
+/*
+==========================================================================================================
+DDL Script create Silver tables 
+==========================================================================================================
+Script purpose:
+  This script creates tables in the silver schema, dropping tables if they already exist.
+  Run this script to re-define the DDL structure of 'silver tables'
+*/ 
+use DatabaseWarehouse;
+
+SELECT TOP (1000) [cst_id]
+      ,[cst_key]
+      ,[cst_firstname]
+      ,[cst_lastname]
+      ,[cst_material_status]
+      ,[cst_gndr]
+      ,[cst_dreate_date]
+  FROM [DatabaseWarehouse].[bronze].[crm_cust_info]
+
+
+SELECT TOP (1000) [prd_id]
+      ,[prd_key]
+      ,[prd_nm]
+      ,[prd_cost]
+      ,[prd_line]
+      ,[prd_start_dt]
+      ,[prd_end_dt]
+  FROM [DatabaseWarehouse].[bronze].[crm_prd_info]
+
+SELECT TOP (1000) * FROM [DatabaseWarehouse].[bronze].[crm_sales_details]
+
+SELECT TOP (1000) * FROM [DatabaseWarehouse].[bronze].[erp_cust_az12]
+SELECT TOP (1000) * FROM [DatabaseWarehouse].[bronze].[erp_loc_a101]
+SELECT TOP (1000) * FROM [DatabaseWarehouse].[bronze].[erp_px_cat_g1v2]
+
+
+--Create table in silver layer
+IF OBJECT_ID ('silver.crm_cust_info', 'U') IS NOT NULL
+   DROP TABLE silver.crm_cust_info;
+CREATE Table silver.crm_cust_info (
+cst_id INT,
+cst_key NVARCHAR(50),
+cst_firstname NVARCHAR(50),
+cst_lastname NVARCHAR(50),
+cst_material_status NVARCHAR(50),
+cst_gndr NVARCHAR(50),
+cst_create_date DATE
+);
+
+IF OBJECT_ID ('silver.crm_prd_info', 'U') IS NOT NULL
+   DROP TABLE silver.crm_prd_info;
+CREATE Table silver.crm_prd_info (
+ prd_id INT,
+ prd_key NVARCHAR(50),
+ prd_nm NVARCHAR(50),
+ prd_cost INT,
+ prd_line NVARCHAR(50),
+ prd_start_dt DATETIME,
+ prd_end_dt DATETIME,
+ dwh_create_date DATETIME2 DEFAULT GETDATE()
+);
+--Alter table since we created cat_id, and modified prd_start_dt and prd_end_dt datatype from DATETIME TO DATE
+IF OBJECT_ID ('silver.crm_prd_info', 'U') IS NOT NULL
+   DROP TABLE silver.crm_prd_info;
+CREATE Table silver.crm_prd_info (
+ prd_id INT,
+ cat_id  NVARCHAR(50),  --added
+ prd_key NVARCHAR(50),
+ prd_nm NVARCHAR(50),
+ prd_cost INT,
+ prd_line NVARCHAR(50),
+ prd_start_dt DATE,  --modified to DATE
+ prd_end_dt DATE,    --modified to DATE
+ dwh_create_date DATETIME2 DEFAULT GETDATE()
+);
+
+IF OBJECT_ID ('silver.crm_sales_details', 'U') IS NOT NULL
+   DROP TABLE silver.crm_sales_details;
+CREATE Table silver.crm_sales_details (
+ sls_ord_num NVARCHAR(50),
+ sls_prd_key NVARCHAR(50),
+ sls_cust_id INT,
+ sls_order_dt INT,
+ sls_ship_dt INT,
+ sls_due_dt INT,
+ sls_sales INT,
+ sls_quantity INT,
+ sls_price INT,
+ dwh_create_date DATETIME2 DEFAULT GETDATE()
+);
+  --we need to change datatype for sls_order_dt, sls_ship_dt, sls_due_dt to Date
+  IF OBJECT_ID ('silver.crm_sales_details', 'U') IS NOT NULL
+   DROP TABLE silver.crm_sales_details;
+CREATE Table silver.crm_sales_details (
+ sls_ord_num NVARCHAR(50),
+ sls_prd_key NVARCHAR(50),
+ sls_cust_id INT,
+ sls_order_dt Date,
+ sls_ship_dt Date,
+ sls_due_dt Date,
+ sls_sales INT,
+ sls_quantity INT,
+ sls_price INT,
+ dwh_create_date DATETIME2 DEFAULT GETDATE()
+);
+
+IF OBJECT_ID ('silver.erp_loc_a101', 'U') IS NOT NULL
+   DROP TABLE silver.erp_loc_a101;
+CREATE Table silver.erp_loc_a101 (
+ cid NVARCHAR(50),
+ cntry NVARCHAR(50),
+ dwh_create_date DATETIME2 DEFAULT GETDATE()
+);
+
+IF OBJECT_ID ('silver.erp_cust_az12', 'U') IS NOT NULL
+   DROP TABLE silver.erp_cust_az12;
+CREATE Table silver.erp_cust_az12 (
+ cid NVARCHAR(50),
+ bdate DATE,
+ gen NVARCHAR(50),
+ dwh_create_date DATETIME2 DEFAULT GETDATE()
+);
+
+IF OBJECT_ID ('silver.erp_px_cat_g1v2', 'U') IS NOT NULL
+   DROP TABLE silver.erp_px_cat_g1v2;
+CREATE Table silver.erp_px_cat_g1v2 (
+ id NVARCHAR(50),
+ cat NVARCHAR(50),
+ subcat NVARCHAR(50),
+ maintenance NVARCHAR(50),
+ dwh_create_date DATETIME2 DEFAULT GETDATE()
+);
